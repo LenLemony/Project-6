@@ -1,0 +1,22 @@
+# Python packages for the Florida Health Insurance Recommender
+# Install with: pip install -r requirements.txt
+# Add or remove packages as the team's choices change.
+
+# Reading settings from .env
+python-dotenv>=1.0
+
+# Fetching data (API calls and file downloads)
+requests>=2.31
+
+# Working with tables of data
+pandas>=2.0
+
+# Talking to PostgreSQL
+psycopg2-binary>=2.9
+SQLAlchemy>=2.0
+
+# The app (questionnaire and results page)
+streamlit>=1.30
+
+# Tests (persona tests for the recommender)
+pytest>=7.4
