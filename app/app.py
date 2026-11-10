@@ -53,7 +53,7 @@ if 0 < st.session_state.page < LOADING_PAGE:
     sections = [
         ("Location & Household", 1, 6),
         ("About the Applicants", 6, NEXT_SECTION),
-        ("Healthcare Needs & Personal Preferences", NEXT_SECTION, RESULTS_PAGE)
+        ("Healthcare Needs & Preferences", NEXT_SECTION, RESULTS_PAGE)
     ]
 
     # Calculate progress
