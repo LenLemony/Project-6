@@ -2,8 +2,25 @@ import streamlit as st
 import pandas as pd
 import time
 import re
+from pathlib import Path
+import sys
 
-zip_codes = pd.read_csv("florida_zip_codes.csv")
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+'''
+Ml model implemented
+'''
+
+@st.cache_resource(show_spinner="Loading the saved model and insurance catalog...")
+def get_recommendation_assets():
+    # Load once per Streamlit process; slider changes reuse these objects.
+    from recommender.inference import load_assets  
+    return load_assets()
+
+# Find the CSV beside app.py, regardless of where Streamlit was launched.
+zip_codes = pd.read_csv(Path(__file__).resolve().parent / "florida_zip_codes.csv")
 zip_codes = zip_codes["ZIP Code"].astype(str).to_numpy()
 
 # Define the header
@@ -788,3 +805,5 @@ if st.session_state.page == NEXT_SECTION + 4:
     validity = out_network is not None
 
     navigation_buttons(validity)
+
+

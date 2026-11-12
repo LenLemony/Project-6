@@ -1,0 +1,201 @@
+{
+  "columns": [
+    "age",
+    "smokes",
+    "monthly_budget",
+    "monthly_premium",
+    "premium_minus_budget",
+    "within_budget",
+    "premium_to_budget",
+    "annual_premium",
+    "deductible_individual",
+    "moop_individual",
+    "annual_premium_plus_moop",
+    "referral_required",
+    "hsa_eligible",
+    "deductibles_integrated",
+    "moop_integrated",
+    "integrated_deductible_individual",
+    "integrated_moop_individual",
+    "integrated_deductible_family_per_person",
+    "integrated_moop_family_per_person",
+    "integrated_deductible_family_group",
+    "integrated_moop_family_group",
+    "medical_deductible_individual",
+    "medical_moop_individual",
+    "medical_deductible_family_per_person",
+    "medical_moop_family_per_person",
+    "medical_deductible_family_group",
+    "medical_moop_family_group",
+    "drug_deductible_individual",
+    "drug_moop_individual",
+    "drug_deductible_family_per_person",
+    "drug_moop_family_per_person",
+    "drug_deductible_family_group",
+    "drug_moop_family_group",
+    "priority_premium",
+    "priority_care_cost",
+    "priority_protection",
+    "priority_doctor_freedom",
+    "primary_care_covered",
+    "primary_care_in_network_copay_amount",
+    "primary_care_in_network_copay_after_deductible",
+    "primary_care_in_network_coinsurance_amount",
+    "primary_care_in_network_coinsurance_after_deductible",
+    "primary_care_out_of_network_coinsurance_amount",
+    "specialist_covered",
+    "specialist_in_network_copay_amount",
+    "specialist_in_network_copay_after_deductible",
+    "specialist_in_network_coinsurance_amount",
+    "specialist_in_network_coinsurance_after_deductible",
+    "specialist_out_of_network_coinsurance_amount",
+    "generic_drugs_covered",
+    "generic_drugs_in_network_copay_amount",
+    "generic_drugs_in_network_copay_after_deductible",
+    "generic_drugs_in_network_coinsurance_amount",
+    "generic_drugs_in_network_coinsurance_after_deductible",
+    "generic_drugs_out_of_network_coinsurance_amount",
+    "emergency_room_covered",
+    "emergency_room_in_network_copay_amount",
+    "emergency_room_in_network_copay_after_deductible",
+    "emergency_room_in_network_coinsurance_amount",
+    "emergency_room_in_network_coinsurance_after_deductible",
+    "emergency_room_out_of_network_coinsurance_amount",
+    "inpatient_hospital_covered",
+    "inpatient_hospital_in_network_copay_amount",
+    "inpatient_hospital_in_network_copay_after_deductible",
+    "inpatient_hospital_in_network_coinsurance_amount",
+    "inpatient_hospital_in_network_coinsurance_after_deductible",
+    "inpatient_hospital_out_of_network_coinsurance_amount",
+    "plan_type",
+    "metal_level",
+    "healthcare_usage",
+    "referral_preference",
+    "out_network_preference",
+    "primary_care_in_network_copay_parse_status",
+    "primary_care_in_network_copay_basis",
+    "primary_care_in_network_coinsurance_parse_status",
+    "primary_care_out_of_network_coinsurance_parse_status",
+    "specialist_in_network_copay_parse_status",
+    "specialist_in_network_copay_basis",
+    "specialist_in_network_coinsurance_parse_status",
+    "specialist_out_of_network_coinsurance_parse_status",
+    "generic_drugs_in_network_copay_parse_status",
+    "generic_drugs_in_network_copay_basis",
+    "generic_drugs_in_network_coinsurance_parse_status",
+    "generic_drugs_out_of_network_coinsurance_parse_status",
+    "emergency_room_in_network_copay_parse_status",
+    "emergency_room_in_network_copay_basis",
+    "emergency_room_in_network_coinsurance_parse_status",
+    "emergency_room_out_of_network_coinsurance_parse_status",
+    "inpatient_hospital_in_network_copay_parse_status",
+    "inpatient_hospital_in_network_copay_basis",
+    "inpatient_hospital_in_network_coinsurance_parse_status",
+    "inpatient_hospital_out_of_network_coinsurance_parse_status"
+  ],
+  "categories": {
+    "plan_type": [
+      "EPO",
+      "HMO",
+      "POS",
+      "PPO"
+    ],
+    "metal_level": [
+      "Bronze",
+      "Expanded Bronze",
+      "Gold",
+      "Platinum",
+      "Silver"
+    ],
+    "healthcare_usage": [
+      "High",
+      "Low",
+      "Moderate",
+      "Not sure"
+    ],
+    "referral_preference": [
+      "Not important",
+      "Somewhat important",
+      "Very important"
+    ],
+    "out_network_preference": [
+      "No"
+    ],
+    "primary_care_in_network_copay_parse_status": [
+      "not_applicable",
+      "parsed"
+    ],
+    "primary_care_in_network_copay_basis": [
+      "unspecified"
+    ],
+    "primary_care_in_network_coinsurance_parse_status": [
+      "not_applicable",
+      "parsed"
+    ],
+    "primary_care_out_of_network_coinsurance_parse_status": [
+      "parsed"
+    ],
+    "specialist_in_network_copay_parse_status": [
+      "needs_review",
+      "not_applicable",
+      "parsed"
+    ],
+    "specialist_in_network_copay_basis": [
+      "unspecified"
+    ],
+    "specialist_in_network_coinsurance_parse_status": [
+      "not_applicable",
+      "parsed"
+    ],
+    "specialist_out_of_network_coinsurance_parse_status": [
+      "parsed"
+    ],
+    "generic_drugs_in_network_copay_parse_status": [
+      "needs_review",
+      "not_applicable",
+      "parsed"
+    ],
+    "generic_drugs_in_network_copay_basis": [
+      "unspecified"
+    ],
+    "generic_drugs_in_network_coinsurance_parse_status": [
+      "not_applicable",
+      "parsed"
+    ],
+    "generic_drugs_out_of_network_coinsurance_parse_status": [
+      "parsed"
+    ],
+    "emergency_room_in_network_copay_parse_status": [
+      "needs_review",
+      "not_applicable",
+      "parsed"
+    ],
+    "emergency_room_in_network_copay_basis": [
+      "unspecified"
+    ],
+    "emergency_room_in_network_coinsurance_parse_status": [
+      "not_applicable",
+      "parsed"
+    ],
+    "emergency_room_out_of_network_coinsurance_parse_status": [
+      "not_applicable",
+      "parsed"
+    ],
+    "inpatient_hospital_in_network_copay_parse_status": [
+      "needs_review",
+      "not_applicable",
+      "parsed"
+    ],
+    "inpatient_hospital_in_network_copay_basis": [
+      "unspecified"
+    ],
+    "inpatient_hospital_in_network_coinsurance_parse_status": [
+      "not_applicable",
+      "parsed"
+    ],
+    "inpatient_hospital_out_of_network_coinsurance_parse_status": [
+      "not_applicable",
+      "parsed"
+    ]
+  }
+}

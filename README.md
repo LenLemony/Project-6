@@ -85,6 +85,11 @@ streamlit run app/app.py
 
 ## Data
 
+For the modeling dataset and reproducible preprocessing commands, see
+[ML preprocessing](docs/ml_preprocessing.md). Run `python -m preprocessing.prepare`
+to generate normalized tables and single-applicant example features from the
+existing cleaned-data ZIP, without modifying source files.
+
 - **Source:** *(fill in: where the plan data comes from)*
 - **Plan year:** *(fill in)*
 - **Date downloaded:** *(fill in)*

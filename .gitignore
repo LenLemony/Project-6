@@ -5,3 +5,7 @@ __pycache__/
 .DS_Store
 data/source/*
 !data/source/.gitkeep
+
+# Rebuild locally with python -m preprocessing.prepare
+data/processed/
+.pytest_cache/
