@@ -192,6 +192,11 @@ if st.session_state.page == 0:
         "Final eligibility and enrollment are determined "
         "through the official Marketplace."
     )
+
+    st.caption(
+        "Inspired by the [official HealthCare.gov plan comparison tool](https://www.healthcare.gov/see-plans/#/). " \
+        "This is an independent project and is not affiliated with or endorsed by HealthCare.gov."
+    )
     
 # Question 01: ZIP Code
 if st.session_state.page == 1:
