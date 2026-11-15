@@ -51,7 +51,7 @@ We call the layers Raw, Clean, and Curated so they are not confused with insuran
 - Git
 - PostgreSQL and a viewer (pgAdmin or DBeaver)
 - Python 3.x
-- *(Update this list if the team picks different tools.)*
+- Streamlit
 
 ### 2. Get the code
 ```bash
@@ -85,9 +85,9 @@ streamlit run app/app.py
 
 ## Data
 
-- **Source:** *(fill in: where the plan data comes from)*
-- **Plan year:** *(fill in)*
-- **Date downloaded:** *(fill in)*
+- **Source:** Plan Attributes, Benefits and Cost Sharing, and Rate CMS Marketplace Public Use Files (PUFs)
+- **Plan year:** 2026
+- **Date downloaded:** 10/25/2026
 - **Notes:** Plans and prices change every year, so results are only correct for the plan year above.
 
 Full details are in `data/README.md`. Large source files are not stored in Git.
@@ -117,10 +117,10 @@ Full details are in `data/README.md`. Large source files are not stored in Git.
 
 ## Status
 
-- [ ] Week 1: plan, research, repo, data sources
-- [ ] Week 2: Raw layer
-- [ ] Week 3: Clean layer
-- [ ] Week 4: Curated layer, recommender, interface
+- [X] Week 1: plan, research, repo, data sources
+- [X] Week 2: Raw layer
+- [X] Week 3: Clean layer
+- [X] Week 4: Curated layer, recommender, interface
 - [ ] Week 5: docs, testing, demo
 
 ## Machine learning prototype
