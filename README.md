@@ -79,7 +79,6 @@ Run the SQL scripts in the order listed in `sql/run_order.md`. In short:
 
 ### 6. Run the app
 ```bash
-# Update this command if the team uses a different tool
 streamlit run app/app.py
 ```
 
