@@ -3,8 +3,28 @@ import pandas as pd
 import altair as alt
 import time
 import re
+import sys
+import json
+from pathlib import Path
 
-zip_codes = pd.read_csv("florida_zip_codes.csv")
+
+# import the model assets 
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from recommender.presentation import money
+
+
+@st.cache_resource(show_spinner="Loading the saved ranking model and plan catalog...")
+def get_model_assets(bundle_signature):
+    from recommender.inference import load_assets
+    return load_assets()
+
+
+zip_codes = pd.read_csv(Path(__file__).resolve().parent / "florida_zip_codes.csv")
 zip_codes = zip_codes["ZIP Code"].astype(str).to_numpy()
 
 # Define the header
@@ -181,7 +201,7 @@ if st.session_state.page == 0:
         if st.button(
             "Get Started",
             type="primary",
-            use_container_width=True,
+            width="stretch",
             icon=":material/arrow_forward:"
         ):
             st.session_state.page = 1
@@ -328,7 +348,7 @@ if st.session_state.page == 4:
 
     quest_header("01", "Location & Household")
 
-    st.markdown("### Will you claim _any dependents_ on your 2027 federal tax return?", anchors=False)
+    st.markdown("### Will you claim _any dependents_ on your 2026 federal tax return?", anchors=False)
 
     has_dependents = st.radio(
         "Select the option that best reflects your situation.", 
@@ -374,13 +394,13 @@ if st.session_state.page == 5:
 
     quest_header("01", "Location & Household")
 
-    st.markdown("### What is your estimated _annual household income_ for 2027?", anchors=False)
+    st.markdown("### What is your estimated _annual household income_ for 2026?", anchors=False)
 
     income = st.number_input(
-        r"Enter your household's expected income for 2027.",
+        r"Enter your household's expected income for 2026.",
         help = (
             r"Enter the total income your household expects to receive "
-            r"throughout 2027, not just your personal income. "
+            r"throughout 2026, not just your personal income. "
             r"For example, if you earn \$45,000 and your spouse earns "
             r"\$25,000, your estimated household income is $70,000."
         ),
@@ -497,7 +517,7 @@ if st.session_state.page == 7:
     st.markdown("### Do you _smoke_?", anchors=False)
 
     you_smoke = st.radio(
-        "",
+        "Select an option",
         ["Yes", "No"],
         label_visibility="collapsed",
         index = None,
@@ -508,7 +528,7 @@ if st.session_state.page == 7:
     st.markdown("### Are you currently _pregnant_?", anchors=False)
 
     you_pregnant = st.radio(
-        "", 
+        "Select an option",
         ["Yes", "No", "Prefer not to say"],
         label_visibility="collapsed",
         index = None,
@@ -784,7 +804,7 @@ if st.session_state.page == NEXT_SECTION + 3:
     )
 
     referral_preference = st.radio(
-        "",
+        "Select an option",
         [
             "Very important",
             "Somewhat important",
@@ -812,7 +832,7 @@ if st.session_state.page == NEXT_SECTION + 4:
     )
 
     out_network = st.radio(
-        "",
+        "Select an option",
         ["Yes", "No", "Not sure"],
         label_visibility= "collapsed",
         index=None,
@@ -834,7 +854,7 @@ if st.session_state.page == NEXT_SECTION + 4:
             "View Results →",
             type="primary",
             disabled=not validity,
-            use_container_width=True
+            width="stretch"
         ):
             st.session_state.page = BENEFITS_PAGE
             st.rerun()
@@ -850,9 +870,9 @@ OFFICIAL_SOURCES = {
     "medicare": "https://www.healthcare.gov/medicare/medicare-and-the-marketplace/"
 }
 
-# 2026 Federal Poverty Level (used for 2027 Marketplace coverage)
+# Use the 2025 poverty guidelines for 2026 Marketplace coverage
 def get_fpl(household_size):
-    return 15960 + 5680 * (household_size - 1)
+    return 15650 + 5500 * (household_size - 1)
 
 # Estimate the tax household size when the answers allow it
 def get_household_size():
@@ -1012,7 +1032,7 @@ def get_potential_benefits(person, household_size, income, applicants):
     # Estimated household income as a percentage of FPL
     income_percentage = 100 * income / get_fpl(household_size)
 
-    # Premium Tax Credit: income-based screening for 2027
+    # Premium Tax Credit: income-based screening for 2026
     if 100 <= income_percentage <= 400:
         add_benefit(
             "Premium Tax Credit (APTC)",
@@ -1158,8 +1178,8 @@ if st.session_state.page == BENEFITS_PAGE:
             )
 
             st.caption(
-                "Based on estimated 2027 household income "
-                "and 2026 federal poverty guidelines."
+                "Based on estimated 2026 household income "
+                "and 2025 federal poverty guidelines."
             )
 
     else:
@@ -1207,7 +1227,7 @@ if st.session_state.page == BENEFITS_PAGE:
         "including citizenship or immigration status, "
         "tax filing information, current health coverage, "
         "and employer-sponsored insurance. Additional "
-        "Marketplace savings restrictions apply in 2027."
+        "Marketplace savings restrictions apply in 2026."
     )
 
     st.markdown(
@@ -1226,194 +1246,10 @@ if st.session_state.page == BENEFITS_PAGE:
         if st.button(
             "See Recommendations →",
             type="primary",
-            use_container_width=True
+            width="stretch"
         ):
             st.session_state.page = RECOMMENDATIONS_PAGE
             st.rerun()
-
-# Placeholder Plans and Ranking
-def get_placeholder_recommendations():
-    """
-    Rank three fictional plans using questionnaire preferences.
-
-    This is a demonstration only.
-    No real Marketplace prices or plan availability are verified.
-    """
-
-    priorities = set(st.session_state.get("priorities", []))
-    usage = st.session_state.get("healthcare_usage", "Not sure")
-    budget = st.session_state.get("monthly_budget", 500)
-
-    referral_preference = st.session_state.get(
-        "referral_preference", "Not important"
-    )
-
-    out_network_preference = st.session_state.get(
-        "out_network", "Not sure"
-    )
-
-    plans = [
-        {
-            "name": "Plan 1",
-            "issuer": "Sample Insurance Company",
-            "plan_type": "HMO",
-            "metal_level": "Bronze",
-            "monthly_premium": 295.00,
-            "deductible": 7500.00,
-            "moop": 9200.00,
-            "referrals_required": True,
-            "out_of_network_covered": False,
-            "description": (
-                "A lower-premium option designed for people who "
-                "prefer smaller monthly payments and expect "
-                "relatively limited healthcare usage."
-            ),
-        },
-        {
-            "name": "Plan 2",
-            "issuer": "Sample Insurance Company",
-            "plan_type": "EPO",
-            "metal_level": "Silver",
-            "monthly_premium": 430.00,
-            "deductible": 4200.00,
-            "moop": 7800.00,
-            "referrals_required": False,
-            "out_of_network_covered": False,
-            "description": (
-                "A balanced option between monthly premiums "
-                "and costs when receiving medical care."
-            ),
-        },
-        {
-            "name": "Plan 3",
-            "issuer": "Sample Insurance Company",
-            "plan_type": "PPO",
-            "metal_level": "Gold",
-            "monthly_premium": 590.00,
-            "deductible": 1500.00,
-            "moop": 5500.00,
-            "referrals_required": False,
-            "out_of_network_covered": True,
-            "description": (
-                "A higher-premium option with a lower deductible "
-                "and more flexibility for accessing healthcare."
-            ),
-        },
-    ]
-
-    def lower_cost_score(value, field):
-        values = [plan[field] for plan in plans]
-        minimum = min(values)
-        maximum = max(values)
-
-        if maximum == minimum:
-            return 1.0
-
-        return (maximum - value) / (maximum - minimum)
-
-    for plan in plans:
-
-        score = 0.0
-        reasons = []
-
-        premium = plan["monthly_premium"]
-        deductible = plan["deductible"]
-        moop = plan["moop"]
-
-        # Budget preference
-        if premium <= budget:
-            score += 20
-            reasons.append("Within your stated monthly budget.")
-        else:
-            score -= min(20, (premium - budget) / 20)
-
-        # Personal priorities
-        if "Lower monthly premiums" in priorities:
-            score += 30 * lower_cost_score(
-                premium, "monthly_premium"
-            )
-
-        if "Lower costs when receiving care" in priorities:
-            score += 30 * lower_cost_score(
-                deductible, "deductible"
-            )
-
-        if "Protection against large medical bills" in priorities:
-            score += 30 * lower_cost_score(
-                moop, "moop"
-            )
-
-        if "More freedom to choose doctors" in priorities:
-            if plan["out_of_network_covered"]:
-                score += 25
-                reasons.append(
-                    "Includes out-of-network benefits."
-                )
-            elif not plan["referrals_required"]:
-                score += 10
-
-        # Expected healthcare usage
-        if usage.startswith("High"):
-            score += 15 * lower_cost_score(
-                deductible, "deductible"
-            )
-            score += 15 * lower_cost_score(
-                moop, "moop"
-            )
-
-        elif usage.startswith("Moderate"):
-            score += 15 * lower_cost_score(
-                deductible, "deductible"
-            )
-
-        elif usage.startswith("Low"):
-            score += 15 * lower_cost_score(
-                premium, "monthly_premium"
-            )
-
-        # Specialist referral preference
-        if referral_preference == "Very important":
-            if not plan["referrals_required"]:
-                score += 20
-                reasons.append(
-                    "Specialist referrals are not required."
-                )
-
-        elif referral_preference == "Somewhat important":
-            if not plan["referrals_required"]:
-                score += 10
-
-        # Out-of-network preference
-        if out_network_preference == "Yes":
-            if plan["out_of_network_covered"]:
-                score += 25
-                reasons.append(
-                    "Includes out-of-network coverage."
-                )
-
-        plan["score"] = round(score, 2)
-        plan["annual_premium"] = premium * 12
-
-        if not reasons:
-            reasons.append(
-                "Compare this plan's sample costs and coverage "
-                "rules with your healthcare preferences."
-            )
-
-        plan["reasons"] = list(dict.fromkeys(reasons))[:3]
-
-    ranked = sorted(
-        plans,
-        key=lambda plan: (
-            -plan["score"],
-            plan["monthly_premium"]
-        )
-    )
-
-    for rank, plan in enumerate(ranked, start=1):
-        plan["rank"] = rank
-
-    return ranked
 
 # Personalized Plan Explanations
 def generate_plan_fit_explanations(plan, all_plans, answers):
@@ -1466,10 +1302,10 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
     # Helper for comparing numeric costs across plans
     def compare_cost(field, label):
 
-        lowest_plan = min(
-            all_plans,
-            key=lambda p: p[field]
-        )
+        available = [p for p in all_plans if p[field] is not None]
+        if plan[field] is None or not available:
+            return f"The {label} is not available in the prepared catalog for this plan."
+        lowest_plan = min(available, key=lambda p: p[field])
 
         current_value = plan[field]
         lowest_value = lowest_plan[field]
@@ -1506,7 +1342,7 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
             message = (
                 compare_cost(
                     "deductible",
-                    "individual deductible"
+                    "household deductible" if plan.get("covered_people", 1) > 1 else "individual deductible"
                 )
                 + " Deductibles are only one component of "
                 "healthcare costs. Copayments and coinsurance "
@@ -1518,7 +1354,7 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
             message = (
                 compare_cost(
                     "moop",
-                    "individual out-of-pocket maximum"
+                    "household out-of-pocket maximum" if plan.get("covered_people", 1) > 1 else "individual out-of-pocket maximum"
                 )
                 + " This limit generally applies to covered "
                 "in-network cost-sharing, not monthly premiums "
@@ -1530,8 +1366,10 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
 
             referral_text = (
                 "Specialist referrals are required."
-                if plan["referrals_required"]
+                if plan["referrals_required"] is True
                 else "Specialist referrals are not required."
+                if plan["referrals_required"] is False
+                else "Specialist referral requirements are not available."
             )
 
             if plan.get("out_of_network_covered") is True:
@@ -1573,7 +1411,8 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
 def render_recommendation_card(
     plan,
     all_plans,
-    highlight=False
+    highlight=False,
+    answers=None,
 ):
 
     container_key = (
@@ -1604,17 +1443,17 @@ def render_recommendation_card(
 
         col1.metric(
             "Monthly Premium",
-            f"USD {plan['monthly_premium']:,.2f}"
+            money(plan["monthly_premium"], 2)
         )
 
         col2.metric(
-            "Deductible",
-            f"USD {plan['deductible']:,.0f}"
+            "Household deductible" if plan.get("covered_people", 1) > 1 else "Individual deductible",
+            money(plan["deductible"])
         )
 
         col3.metric(
-            "Max Out-of-Pocket",
-            f"USD {plan['moop']:,.0f}"
+            "Household maximum out-of-pocket" if plan.get("covered_people", 1) > 1 else "Individual maximum out-of-pocket",
+            money(plan["moop"])
         )
 
         st.caption(
@@ -1625,8 +1464,9 @@ def render_recommendation_card(
         # Coverage characteristics
         referral_text = (
             "Required"
-            if plan["referrals_required"]
-            else "Not required"
+            if plan["referrals_required"] is True
+            else "Not required" if plan["referrals_required"] is False
+            else "Information not available"
         )
 
         
@@ -1654,7 +1494,7 @@ def render_recommendation_card(
         explanations = generate_plan_fit_explanations(
             plan,
             all_plans,
-            st.session_state
+            st.session_state if answers is None else answers
         )
 
         st.markdown(
@@ -1683,11 +1523,11 @@ def make_pie_chart(plans, field, title):
 
     chart_data = pd.DataFrame([
         {
-            "Plan": plan["name"],
+            "Plan": f"#{plan['rank']} {plan['name']}",
             "Value": plan[field]
         }
         for plan in plans
-    ])
+    ]).dropna(subset=["Value"])
 
     chart = (
         alt.Chart(chart_data)
@@ -1700,8 +1540,8 @@ def make_pie_chart(plans, field, title):
             color=alt.Color(
                 "Plan:N",
                 scale=alt.Scale(
-                    domain=["Plan 1", "Plan 2", "Plan 3"],
-                    range=["#6595D0", "#75BDA7", "#E7B56D"]
+                    domain=[f"#{p['rank']} {p['name']}" for p in plans],
+                    range=["#6595D0", "#75BDA7", "#E7B56D", "#B096C7", "#D38996"][:len(plans)]
                 ),
                 legend=alt.Legend(
                     orient="bottom",
@@ -1736,9 +1576,9 @@ def render_price_comparison_charts(plans):
     )
 
     st.caption(
-        "Compare the monthly premiums, individual "
+        "Compare the monthly premiums, applicable "
         "deductibles, and maximum out-of-pocket limits "
-        "of the three sample plans."
+        "of the model-ranked plans. Missing limits are omitted from charts."
     )
 
     col1, col2, col3 = st.columns(3)
@@ -1763,16 +1603,67 @@ def render_price_comparison_charts(plans):
         chart = make_pie_chart(
             plans,
             "moop",
-            "Max Out-of-Pocket"
+            "Maximum out-of-pocket"
         )
         st.altair_chart(chart, width="stretch")
 
     st.caption(
         "Pie slices represent each plan's share of the "
-        "three-plan total for that metric, not a breakdown "
+        "compared-plan total for that metric, not a breakdown "
         "of an individual plan's costs. Hover over each "
         "slice to view the corresponding dollar amount."
     )
+
+
+# gets the model and makes the recommendation
+def render_model_recommendations():
+
+    """Show the ranked plans in the recommendation cards and charts."""
+    from recommender.features import profile_from_answers
+    from recommender.inference import recommend
+    from recommender.presentation import plan_cards
+
+    st.write("Up to five plans ranked by the saved LGBMRanker for your answers.")
+    st.info(
+        "Prototype: 2026 plans priced for the configured demonstration region, "
+        "not verified for your ZIP. "
+        "Premiums are before subsidies; rankings use synthetic preference labels."
+    )
+    
+    if not any(st.session_state.get(key) for key in ["include_me", "include_partner", "include_dependents"]):
+        st.info("Select at least one applicant in the questionnaire.")
+        return
+    try:
+        signature = tuple((ROOT / name).stat().st_mtime_ns for name in [
+            "models/insurance_ranker.txt", "models/feature_schema.json",
+            "data/processed/plan_features.csv", "data/processed/rates.csv.gz"])
+        assets = get_model_assets(signature)
+        # Get the demo region from the settings file.
+        # connect ZIP codes to the right region.
+        config = json.loads((ROOT / "models/inference_config.json").read_text(encoding="utf-8"))
+        area = config["rating_area_id"]
+        if "monthly_budget" not in st.session_state:
+            st.info("Complete the questionnaire before requesting plan comparisons.")
+            return
+        answers = dict(st.session_state)
+        profile = profile_from_answers(
+            answers, profile_id="current_session", rating_area_id=area, plan_year=config["plan_year"],
+        )
+        recommendations = plan_cards(recommend(profile, assets))
+        if not recommendations:
+            st.info("No matching plans fit this budget. Try increasing the budget or selecting another rating area.")
+            return
+        st.markdown("### Your Best Match", anchors=False)
+        render_recommendation_card(recommendations[0], recommendations, highlight=True, answers=answers)
+        if len(recommendations) > 1:
+            st.markdown("### Other Recommended Plans", anchors=False)
+            for plan in recommendations[1:]:
+                render_recommendation_card(plan, recommendations, answers=answers)
+        st.divider()
+        render_price_comparison_charts(recommendations)
+    except (ValueError, KeyError, FileNotFoundError) as error:
+        st.warning(f"Unable to produce model comparisons: {error}")
+
 
 # Health Insurance Recommendations Page
 if st.session_state.page == RECOMMENDATIONS_PAGE:
@@ -1804,58 +1695,7 @@ if st.session_state.page == RECOMMENDATIONS_PAGE:
         anchor=False
     )
 
-    st.write(
-        "Based on your answers, here are three sample "
-        "health insurance plans ranked by how well they "
-        "match your preferences."
-    )
-
-    st.info(
-        "Dylan, please alter this to account for your model"
-    )
-
-    if (
-        st.session_state.get("include_partner", False)
-        or st.session_state.get("include_dependents", False)
-    ):
-        st.caption(
-            "The current pricing pipeline supports one "
-            "applicant only. Household pricing is not yet "
-            "implemented."
-        )
-
-    # Generate and rank placeholder recommendations
-    recommendations = get_placeholder_recommendations()
-
-    best_plan = recommendations[0]
-    other_plans = recommendations[1:]
-
-    # First-ranked plan
-    st.markdown("### Your Best Match", anchors=False)
-
-    render_recommendation_card(
-        best_plan,
-        recommendations,
-        highlight=True
-    )
-
-    # Remaining ranked plans
-    st.markdown(
-        "### Other Recommended Plans",
-        anchors=False
-    )
-
-    for plan in other_plans:
-        render_recommendation_card(
-            plan,
-            recommendations,
-            highlight=False
-        )
-
-    # Cost comparison charts
-    st.divider()
-
-    render_price_comparison_charts(recommendations)
+    render_model_recommendations()
 
     st.divider()
 
@@ -1871,7 +1711,7 @@ if st.session_state.page == RECOMMENDATIONS_PAGE:
         if st.button(
             "↻ Start Again",
             type="primary",
-            use_container_width=True,
+            width="stretch",
             key="recommendations_restart"
         ):
             for key in list(st.session_state.keys()):
