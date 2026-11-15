@@ -1267,7 +1267,8 @@ if st.session_state.page == BENEFITS_PAGE:
         income_percentage = 100 * income / get_fpl(household_size)
 
         with st.container(border=True):
-            st.markdown("#### Your Household Summary")
+            st.markdown("#### Your Household Summary",
+                        anchors=False)
             col1, col2, col3 = st.columns(3)
             col1.metric("Household Size", household_size)
             col2.metric("Annual Income", f"USD {income:,.0f}")
@@ -1607,6 +1608,7 @@ def render_recommendation_card(
             st.caption(
                 "No personal priorities were selected."
             )
+
 
 # altair pie charts
 def make_pie_chart(plans, field, title):
