@@ -1,15 +1,13 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-import time
+import math
 import re
 import sys
 import json
 from pathlib import Path
 
-
 # import the model assets 
-
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -17,26 +15,28 @@ if str(ROOT) not in sys.path:
 
 from recommender.presentation import money
 
-
 @st.cache_resource(show_spinner="Loading the saved ranking model and plan catalog...")
 def get_model_assets(bundle_signature):
     from recommender.inference import load_assets
     return load_assets()
 
 
-zip_codes = pd.read_csv(Path(__file__).resolve().parent / "florida_zip_codes.csv")
+# load the supported zip codes for input validation
+
+zip_codes = pd.read_csv(
+    Path(__file__).resolve().parent / "florida_zip_codes.csv"
+)
 zip_codes = zip_codes["ZIP Code"].astype(str).to_numpy()
 
-# Define the header
+
+# define the header for questionnaire's pages
 def quest_header(section_num, section_title):
 
-    # Questionnaire Title
     st.title("Health Insurance Questionnaire", anchor=False)
-
-    # Present the first page
     st.markdown(f"## Section {section_num} | _{section_title}_", anchors=False)
 
-# Define the first state
+
+# define the app's initial state
 
 if "page" not in st.session_state:
     st.session_state.page = 0
@@ -47,7 +47,9 @@ if "zip_touched" not in st.session_state:
 if "people_selected" not in st.session_state:
     st.session_state.people_selected = False
 
-# Setup for dependents pages
+
+# calculate page positions dynamically based on the number
+# of dependents who need coverage.
 
 DEPENDENTS_START = 9
 
@@ -61,7 +63,8 @@ NEXT_SECTION = DEPENDENTS_START + n_dependents
 BENEFITS_PAGE = NEXT_SECTION + 5
 RECOMMENDATIONS_PAGE = BENEFITS_PAGE + 1
 
-# Sidebar progress
+
+# sidebar for progress tracking
 if 0 < st.session_state.page < BENEFITS_PAGE:
 
     current_page = st.session_state.page
@@ -83,10 +86,6 @@ if 0 < st.session_state.page < BENEFITS_PAGE:
         100,
         max(0, int((current_page - 1) / total_steps * 100))
     )
-
-    # Only reach 100% on the results page
-    if current_page >= BENEFITS_PAGE:
-        progress = 100
 
     # Sidebar
     if current_page > 0:
@@ -118,15 +117,17 @@ if 0 < st.session_state.page < BENEFITS_PAGE:
 
                 st.markdown(f"{icon}  {label}")
 
-# Define functions to track user interaction
 
+# define functions to track user interaction
 def mark_zip_touched():
     st.session_state.zip_touched = True
 
 def mark_people_selected():
     st.session_state.people_selected = True
 
-# Navigation buttons 
+
+# reuse navigation controls across pages and allow conditional
+# page skipping based on the user's previous answers
 def navigation_buttons(validity, skip_f=1, skip_b=1):
     col1, spacer, col2 = st.columns([1, 4, 0.6])
 
@@ -140,7 +141,8 @@ def navigation_buttons(validity, skip_f=1, skip_b=1):
             st.session_state.page += skip_f
             st.rerun()
 
-# Landing Page
+
+# landing Page
 if st.session_state.page == 0:
 
     st.markdown(
@@ -208,7 +210,7 @@ if st.session_state.page == 0:
             st.rerun()
 
     st.caption(
-        "This tool provides informational plan comparisons. "
+        "This tool provides informational plan comparisons for 2026. "
         "Final eligibility and enrollment are determined "
         "through the official Marketplace."
     )
@@ -217,13 +219,13 @@ if st.session_state.page == 0:
         "Inspired by the [official HealthCare.gov plan comparison tool](https://www.healthcare.gov/see-plans/#/). " \
         "This is an independent project and is not affiliated with or endorsed by HealthCare.gov."
     )
+
     
-# Question 01: ZIP Code
+# question 01: zip code
 if st.session_state.page == 1:
 
     quest_header("01", "Location & Household")
 
-    # Get the user's zipcode
     st.markdown("### What is your _ZIP Code?_ (Florida)", anchors=False)
 
     zip_code = st.text_input(
@@ -246,7 +248,8 @@ if st.session_state.page == 1:
 
     navigation_buttons(validity)
 
-# Question 02: Claimed as a Dependent
+
+# question 02: claimed as a dependent
 if st.session_state.page == 2:
 
     quest_header("01", "Location & Household")
@@ -297,7 +300,8 @@ if st.session_state.page == 2:
 
     navigation_buttons(validity, skip_f = 3 if is_dependent == "Yes" else 1)
 
-# Question 03: Married
+
+# question 03: married
 if st.session_state.page == 3:
 
     quest_header("01", "Location & Household")
@@ -343,7 +347,8 @@ if st.session_state.page == 3:
 
     navigation_buttons(validity)
 
-# Question 04: Claim Dependents
+
+# question 04: claimed dependents
 if st.session_state.page == 4:
 
     quest_header("01", "Location & Household")
@@ -389,7 +394,8 @@ if st.session_state.page == 4:
 
     navigation_buttons(validity)
 
-# Question 05: Estimated Annual Household Income
+
+# question 05: estimated annual household income
 if st.session_state.page == 5:
 
     quest_header("01", "Location & Household")
@@ -419,12 +425,12 @@ if st.session_state.page == 5:
 
     navigation_buttons(validity, skip_b = 3 if st.session_state.get("is_dependent") == "Yes" else 1)
 
-# Question 06: Who needs insurance
+
+# question 06: who needs insurance
 if st.session_state.page == 6:
 
     quest_header("02", "About the Applicants")
 
-    # Get the amount of people wanting to get health insurance
     st.markdown("### Who _needs_ health insurance coverage?", anchors=False)
 
     st.text(
@@ -492,12 +498,12 @@ if st.session_state.page == 6:
         skip_f=next_page - st.session_state.page
     )
 
-# Question 07: Questions about User
+
+# question 07: questions about the user
 if st.session_state.page == 7:
 
     quest_header("02", "About the Applicants")
 
-    # Get the amount of people wanting to get health insurance
     st.markdown("### How old are _you_?", anchors=False)
 
     you_age = st.number_input(
@@ -552,12 +558,12 @@ if st.session_state.page == 7:
         skip_f=next_page - st.session_state.page
     )
 
-# Question 08: Questions about Spouse
+
+# question 08: questions about the user's spouse
 if st.session_state.page == 8:
 
     quest_header("02", "About the Applicants")
 
-    # Get the amount of people wanting to get health insurance
     st.markdown("### How old is your _spouse_?", anchors=False)
 
     st.text("Please inform your spouse's age.")
@@ -616,7 +622,8 @@ if st.session_state.page == 8:
         skip_b=st.session_state.page - previous_page
     )
 
-# Question 09: Questions about Dependents
+
+# question 09: questions about the user's dependents
 if DEPENDENTS_START <= st.session_state.page < NEXT_SECTION:
 
     quest_header("02", "About the Applicants")
@@ -657,12 +664,13 @@ if DEPENDENTS_START <= st.session_state.page < NEXT_SECTION:
     )
 
     st.markdown(
-        f"### Does this dependent _smoke_?",
+        f"### Is this dependent _pregnant_?",
         anchors=False
     )
     pregnant = st.radio(
         "Is this dependent currently pregnant?",
         ["Yes", "No", "Prefer not to say"],
+        label_visibility= "collapsed",
         index=None,
         key=f"dependent_{i}_pregnant",
         persist_state="session"
@@ -670,7 +678,8 @@ if DEPENDENTS_START <= st.session_state.page < NEXT_SECTION:
 
     validity = smoke is not None and pregnant is not None
 
-    # Determine previous page
+    # determine previous page
+
     if i > 0:
         previous_page = st.session_state.page - 1
 
@@ -689,13 +698,14 @@ if DEPENDENTS_START <= st.session_state.page < NEXT_SECTION:
         skip_b=st.session_state.page - previous_page
     )
 
-# Question 10: Expected Healthcare Usage
+
+# question 10: expected healthcare usage
 if st.session_state.page == NEXT_SECTION:
 
     quest_header("03", "Healthcare Needs & Preferences")
 
     st.markdown(
-        "### How much healthcare do you and your family "
+        "### How much healthcare do the applicants "
         "_expect to need_ in the coming year?",
         anchors=False
     )
@@ -732,7 +742,8 @@ if st.session_state.page == NEXT_SECTION:
         skip_b=NEXT_SECTION - previous_page
     )
 
-# Question 11: Personal Priorities
+
+# question 11: personal priorities
 if st.session_state.page == NEXT_SECTION + 1:
 
     quest_header("03", "Healthcare Needs & Preferences")
@@ -762,7 +773,8 @@ if st.session_state.page == NEXT_SECTION + 1:
 
     navigation_buttons(validity)
 
-# Question 12: Monthly Budget
+
+# question 12: monthly budget
 if st.session_state.page == NEXT_SECTION + 2:
 
     quest_header("03", "Healthcare Needs & Preferences")
@@ -792,7 +804,8 @@ if st.session_state.page == NEXT_SECTION + 2:
 
     navigation_buttons(True)
 
-# Question 13: Specialist Referrals
+
+# question 13: specialist referrals
 if st.session_state.page == NEXT_SECTION + 3:
 
     quest_header("03", "Healthcare Needs & Preferences")
@@ -820,7 +833,8 @@ if st.session_state.page == NEXT_SECTION + 3:
 
     navigation_buttons(validity)
 
-# Question 14: Out-of-Network Coverage
+
+# question 14: out-of-network coverage
 if st.session_state.page == NEXT_SECTION + 4:
 
     quest_header("03", "Healthcare Needs & Preferences")
@@ -859,50 +873,88 @@ if st.session_state.page == NEXT_SECTION + 4:
             st.session_state.page = BENEFITS_PAGE
             st.rerun()
 
-# Results Page: Potential Benefits
+
+# potential benefits page
+
+COVERAGE_YEAR = 2026
 
 OFFICIAL_SOURCES = {
     "marketplace": "https://www.healthcare.gov/lower-costs/",
     "tax_credit": "https://www.irs.gov/credits-deductions/premium-tax-credit-ptc-overview",
     "cost_sharing": "https://www.healthcare.gov/lower-costs/save-on-out-of-pocket-costs/",
     "kidcare": "https://www.floridakidcare.org/requirements/",
-    "medicaid": "https://www.myflfamilies.com/medicaid/",
-    "medicare": "https://www.healthcare.gov/medicare/medicare-and-the-marketplace/"
+    "medicaid": "https://www.myflfamilies.com/medicaid/determining-your-income-limit",
+    "medicare": "https://www.healthcare.gov/medicare/medicare-and-the-marketplace/",
 }
 
-# Use the 2025 poverty guidelines for 2026 Marketplace coverage
+
+# marketplace coverage in 2026 uses the 2025 federal poverty guidelines.
+# these values apply to florida and the other contiguous states.
 def get_fpl(household_size):
     return 15650 + 5500 * (household_size - 1)
 
-# Estimate the tax household size when the answers allow it
+
+# estimate tax household size from the questionnaire's existing paths
 def get_household_size():
     state = st.session_state
+    dependent_status = state.get("is_dependent")
 
-    if state.get("is_dependent") != "No":
+    if dependent_status == "Yes":
+        # Question 02 already collects the claiming tax filer's household size.
+        # Questions 03 and 04 are skipped for this path.
+        raw_size = state.get("dependent_total_household")
+        try:
+            size = int(raw_size)
+            if isinstance(raw_size, bool) or size < 2 or float(raw_size) != size:
+                return None
+            return size
+        except (TypeError, ValueError, OverflowError):
+            return None
+
+    if dependent_status != "No":
         return None
 
-    if state.get("has_dependents") not in ("Yes", "No"):
-        return None
-
+    # For non-dependents, the questionnaire asks about marriage and dependents.
     married = state.get("married")
+    has_dependents = state.get("has_dependents")
 
-    if married not in ("Yes", "No"):
+    if married not in ("Yes", "No") or has_dependents not in ("Yes", "No"):
         return None
 
+    # Separate tax returns generally require a more individualized PTC review.
     if married == "Yes" and state.get("jointly") != "Yes":
         return None
 
-    household = 1
+    household = 1 + (1 if married == "Yes" else 0)
 
-    if married == "Yes":
-        household += 1
-
-    if state.get("has_dependents") == "Yes":
-        household += int(state.get("total_dependents_tax", 0) or 0)
+    if has_dependents == "Yes":
+        raw_count = state.get("total_dependents_tax")
+        try:
+            count = int(raw_count)
+            if isinstance(raw_count, bool) or count < 1 or float(raw_count) != count:
+                return None
+            household += count
+        except (TypeError, ValueError, OverflowError):
+            return None
 
     return household
 
-# Collect applicants using existing questionnaire responses
+
+# read the annual household income already collected in question 05
+def get_estimated_annual_income():
+    value = st.session_state.get("income")
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        income = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not math.isfinite(income) or income < 0:
+        return None
+    return income
+
+
+# use only people selected as needing health insurance coverage
 def get_applicants():
     state = st.session_state
     applicants = []
@@ -912,52 +964,69 @@ def get_applicants():
             "name": "You",
             "age": state.get("you_age"),
             "pregnant": state.get("you_pregnant") == "Yes",
-            "role": "self"
+            "role": "self",
         })
 
     if state.get("include_partner", False):
-        relationship = (
-            "Your spouse"
-            if state.get("married") == "Yes"
-            else "Your partner"
-        )
 
+        if state.get("is_dependent") == "Yes":
+            relationship = "Your partner/spouse"
+        else:
+            relationship = (
+                "Your spouse" if state.get("married") == "Yes" else "Your partner"
+            )
         applicants.append({
             "name": relationship,
             "age": state.get("spouse_age"),
             "pregnant": state.get("spouse_pregnant") == "Yes",
-            "role": "partner"
+            "role": "partner",
         })
 
     if state.get("include_dependents", False):
         n = int(state.get("total_dependents", 0) or 0)
-
         for i in range(n):
             applicants.append({
                 "name": f"Dependent {i + 1}",
                 "age": state.get(f"dependent_{i}_age"),
-                "pregnant": (
-                    state.get(f"dependent_{i}_pregnant") == "Yes"
-                ),
-                "role": "dependent"
+                "pregnant": state.get(f"dependent_{i}_pregnant") == "Yes",
+                "role": "dependent",
             })
 
     return applicants
 
-# Identify potential benefits for each applicant
+
+# florida dcf monthly thresholds for ages 19-20 and parents/caretakers
+# effective april 2026 through march 2027; other medicaid groups differ
+FLORIDA_FAMILY_MEDICAID_MONTHLY_LIMITS = {
+    1: 356,
+    2: 478,
+    3: 600,
+    4: 723,
+    5: 846,
+    6: 968,
+    7: 1091,
+    8: 1214,
+    9: 1335,
+    10: 1459,
+    11: 1583,
+    12: 1706,
+}
+
+
+# suggest coverage programs, without determining official eligibility
 def get_potential_benefits(person, household_size, income, applicants):
 
     benefits = []
+    state = st.session_state
     name = person["name"]
     age = person.get("age")
     role = person.get("role")
-    state = st.session_state
 
     def add_benefit(title, message, source):
         benefits.append({
             "title": title,
             "message": message,
-            "source": OFFICIAL_SOURCES[source]
+            "source": OFFICIAL_SOURCES[source],
         })
 
     if age is None:
@@ -965,134 +1034,95 @@ def get_potential_benefits(person, household_size, income, applicants):
             "Marketplace Coverage Review",
             f"Coverage options for {name.lower()} can be explored through the "
             "official Marketplace application. More information is needed.",
-            "marketplace"
+            "marketplace",
         )
         return benefits
 
-    # Florida KidCare
     if age < 19:
         add_benefit(
             "Florida KidCare",
             f"{name} may qualify for coverage through Florida KidCare. "
             "Free, subsidized, or full-pay options may apply depending on "
             "income and other eligibility requirements.",
-            "kidcare"
+            "kidcare",
         )
 
-    # Pregnancy-related Medicaid
     if person.get("pregnant") is True:
         add_benefit(
             "Florida Pregnancy Medicaid",
             f"{name} may qualify for pregnancy-related Medicaid coverage. "
             "Income, household composition, and other requirements apply.",
-            "medicaid"
+            "medicaid",
         )
 
-    # Children's coverage is reviewed separately
     if age < 19:
         return benefits
 
-    # Medicare
     if age >= 65:
         add_benefit(
             "Medicare Eligibility Review",
             f"{name} may qualify for Medicare based on age. "
             "Eligibility and any Part A premium depend on additional rules. "
             "If Medicare is not available, ask about Marketplace options.",
-            "medicare"
+            "medicare",
         )
         return benefits
 
-    # An unmarried partner may belong to a different tax household
-    unmarried_partner_applying = (
+    # an unmarried partner may have a different tax household. for tax
+    # dependents, marriage was not asked, so that relationship is also unknown.
+    partner_household_uncertain = (
         state.get("include_partner", False)
-        and state.get("married") != "Yes"
-    )
-
-    unknown_tax_household = (
-        household_size is None
-        or income is None
-        or unmarried_partner_applying
-        or (
-            role == "partner"
-            and state.get("married") != "Yes"
+        and (
+            state.get("is_dependent") == "Yes"
+            or state.get("married") != "Yes"
         )
     )
 
-    if unknown_tax_household:
-        add_benefit(
-            "Marketplace Savings Review",
-            f"{name} may have Marketplace coverage or savings options. "
-            "More information about the applicable tax household and "
-            "income is needed before estimating income-based assistance.",
-            "marketplace"
-        )
-        return benefits
-
-    # Estimated household income as a percentage of FPL
-    income_percentage = 100 * income / get_fpl(household_size)
-
-    # Premium Tax Credit: income-based screening for 2026
-    if 100 <= income_percentage <= 400:
-        add_benefit(
-            "Premium Tax Credit (APTC)",
-            f"Based on estimated household income, {name.lower()} may meet "
-            "the income range for a Premium Tax Credit that can lower "
-            "Marketplace premiums. Other eligibility rules apply, "
-            "including tax filing, other coverage, and immigration status.",
-            "tax_credit"
-        )
-
-        # Income-based Cost-Sharing Reductions
-        if income_percentage <= 250:
-            add_benefit(
-                "Cost-Sharing Reductions (CSR)",
-                f"Based on estimated household income, {name.lower()} may "
-                "meet the income range for Cost-Sharing Reductions. "
-                "To receive income-based CSR savings on deductibles and "
-                "copayments, an eligible person generally must choose a "
-                "Silver Marketplace plan. Other requirements apply.",
-                "cost_sharing"
-            )
-
-    # Florida Medicaid preliminary income screening
-    # Official DCF monthly limits effective April 2026–March 2027.
-    # These figures must be reviewed when updated limits are published.
-    # Annual income / 12 is only an approximation; actual Medicaid
-    # countable income and household rules may be different.
-    florida_family_medicaid_monthly_limits = {
-        1: 356,
-        2: 478,
-        3: 600,
-        4: 723,
-        5: 846,
-        6: 968,
-        7: 1091,
-        8: 1214
-    }
-
-    published_limit = florida_family_medicaid_monthly_limits.get(
-        household_size
+    income_screen_available = (
+        household_size is not None
+        and income is not None
+        and not partner_household_uncertain
     )
 
+    # a tax-household size is only a proxy for the person's medicaid household
+    # this comparison flags cases worth reviewing; it does not decide eligibility.
+    medicaid_limit = (
+        FLORIDA_FAMILY_MEDICAID_MONTHLY_LIMITS.get(household_size)
+        if income_screen_available
+        else None
+    )
+    medicaid_screen_available = medicaid_limit is not None
     low_income_for_medicaid_review = (
-        published_limit is not None
-        and income >= 0
-        and income / 12 <= published_limit
+        medicaid_screen_available and income / 12 <= medicaid_limit
+    )
+    show_medicaid_review = (
+        not medicaid_screen_available or low_income_for_medicaid_review
     )
 
-    # Medicaid category for certain 19- and 20-year-olds
-    if age in (19, 20) and low_income_for_medicaid_review:
+    if low_income_for_medicaid_review:
+        medicaid_income_message = (
+            "The reported income is within the published limit using the "
+            "estimated household size, but Medicaid may count households "
+            "and income differently. "
+        )
+    else:
+        medicaid_income_message = (
+            "A reliable Medicaid income comparison cannot be made from "
+            "these answers. "
+        )
+
+    if age in (19, 20) and show_medicaid_review:
         add_benefit(
             "Florida Medicaid — Ages 19–20 Review",
-            f"{name} may be worth screening for Florida Medicaid's "
-            "19–20 age category. The reported annual income is low "
-            "enough for a preliminary review against the published "
-            "monthly income table, but eligibility is not confirmed.",
-            "medicaid"
+            f"{name} may want to explore Florida Medicaid's ages 19–20 "
+            "category. " + medicaid_income_message
+            + "This category generally requires being unmarried or having "
+            "had a marriage annulled. Other eligibility rules apply.",
+            "medicaid",
         )
 
-    # Possible parent or caretaker Medicaid category
+    # identify possible minor children, including those who already
+    # have coverage and were not selected as applicants.
     minor_applicant_present = any(
         p.get("role") == "dependent"
         and p.get("age") is not None
@@ -1100,170 +1130,224 @@ def get_potential_benefits(person, household_size, income, applicants):
         for p in applicants
     )
 
+    has_tax_dependents = (
+        state.get("is_dependent") == "No"
+        and state.get("has_dependents") == "Yes"
+    )
+
+    possible_minor_child = (
+        minor_applicant_present or has_tax_dependents
+    )
+
     if (
-        age >= 21
+        age >= 19
         and role in ("self", "partner")
-        and minor_applicant_present
-        and low_income_for_medicaid_review
+        and possible_minor_child
+        and show_medicaid_review
     ):
         add_benefit(
             "Florida Medicaid — Parent or Caretaker Review",
-            f"{name} may be worth screening for Florida Medicaid if "
-            "they are an eligible parent or caretaker living with a "
-            "minor child. The actual Medicaid household, countable "
-            "income, and other requirements must be verified.",
-            "medicaid"
+            medicaid_income_message
+            + "If this adult is a parent or qualifying caretaker "
+            "relative living with a dependent child under 18, "
+            "this Medicaid category may be worth exploring. "
+            "Other eligibility requirements apply.",
+            "medicaid",
         )
 
-    # General fallback when no specific benefit is suggested
+    if not income_screen_available:
+        add_benefit(
+            "Marketplace Savings Review",
+            f"{name} may have Marketplace coverage or savings options. "
+            "The available information is not enough to compare income "
+            "against the applicable tax household reliably.",
+            "marketplace",
+        )
+        return benefits
+
+    income_percentage = 100 * income / get_fpl(household_size)
+
+    # in 2026, the usual income screen for ptc is 100%-400% of fpl.
+    # the income-based csr screen generally extends up to 250% of fpl.
+    if 100 <= income_percentage <= 400:
+        if state.get("is_dependent") == "Yes" and role == "self":
+            ptc_message = (
+                "Based on the household size and annual income reported for "
+                "the person claiming you as a tax dependent, that tax household "
+                "may fall within the income range for a Premium Tax Credit. "
+                "The claiming taxpayer generally handles Marketplace savings; "
+                "a dependent cannot obtain a separate tax credit based only "
+                "on their own income. Other eligibility rules apply."
+            )
+            csr_message = (
+                "The reported tax household may also fall within the income "
+                "range for Cost-Sharing Reductions. Eligible household members "
+                "generally must enroll in a Silver Marketplace plan to receive "
+                "these savings. Other eligibility rules apply."
+            )
+                
+        elif state.get("is_dependent") == "Yes":
+            ptc_message = (
+                "The reported household income falls within the general "
+                "Premium Tax Credit screening range. However, this "
+                "applicant's tax household and individual eligibility "
+                "must be confirmed through an official application."
+            )
+
+            csr_message = (
+                "The reported household income falls within the general "
+                "Cost-Sharing Reduction screening range. Eligibility "
+                "for this applicant must be confirmed, and eligible "
+                "members generally need a Silver Marketplace plan."
+            )
+
+        else:
+            ptc_message = (
+                f"Based on estimated household income, {name.lower()} may "
+                "meet the income range for a Premium Tax Credit that can "
+                "lower Marketplace premiums. Other eligibility rules apply, "
+                "including tax filing, other coverage, and immigration status."
+            )
+            csr_message = (
+                f"Based on estimated household income, {name.lower()} may "
+                "meet the income range for Cost-Sharing Reductions. "
+                "Eligible people generally must select a Silver Marketplace "
+                "plan to receive these savings. Other requirements apply."
+            )
+
+        add_benefit("Premium Tax Credit (PTC)", ptc_message, "tax_credit")
+
+        if income_percentage <= 250:
+            add_benefit("Cost-Sharing Reductions (CSR)", csr_message, "cost_sharing")
+
     if not benefits:
         add_benefit(
             "Marketplace Coverage Options",
             f"{name} may be able to explore Marketplace health plans. "
-            "The available answers did not identify a specific savings "
-            "program for this person; coverage and savings eligibility "
-            "must be checked through an official application.",
-            "marketplace"
+            "The answers did not identify a specific savings program, "
+            "but coverage and financial assistance can be reviewed "
+            "through an official application.",
+            "marketplace",
         )
 
     return benefits
 
-# Display Results Page
+
+# display potential benefits page
 if st.session_state.page == BENEFITS_PAGE:
-
     st.caption("HEALTH INSURANCE QUESTIONNAIRE")
-
     st.title("Your Potential Benefits", anchor=False)
-
     st.write(
         "Based on your answers, here are some programs "
-        "and savings opportunities you and your family "
-        "may qualify for."
+        "and savings opportunities the applicants may qualify for."
     )
-
-    st.caption(
-        "These are preliminary suggestions, not official "
-        "eligibility determinations."
-    )
+    st.caption("These are preliminary suggestions, not official eligibility determinations.")
 
     applicants = get_applicants()
     household_size = get_household_size()
-    income = st.session_state.get("income")
+    income = get_estimated_annual_income()
 
-    # Household summary
-    if household_size is not None and income is not None:
-
-        income_percentage = (
-            100 * income / get_fpl(household_size)
+    # a summary is possible for a dependent because the questionnaire already
+    # asked for the claiming taxpayer's household size.
+    # an unmarried or unclassified partner may belong to a different tax
+    # household, but this does not erase the respondent's household answers.
+    partner_household_uncertain = (
+        st.session_state.get("include_partner", False)
+        and (
+            st.session_state.get("is_dependent") == "Yes"
+            or st.session_state.get("married") != "Yes"
         )
+    )
+
+    if (
+        household_size is not None
+        and income is not None
+        and not partner_household_uncertain
+    ):
+        income_percentage = 100 * income / get_fpl(household_size)
 
         with st.container(border=True):
             st.markdown("#### Your Household Summary")
-
             col1, col2, col3 = st.columns(3)
-
-            col1.metric(
-                "Household Size",
-                household_size
-            )
-
-            col2.metric(
-                "Annual Income",
-                f"USD {income:,.0f}"
-            )
-
-            col3.metric(
-                "Income as % of FPL",
-                f"{income_percentage:.0f}%"
-            )
-
+            col1.metric("Household Size", household_size)
+            col2.metric("Annual Income", f"USD {income:,.0f}")
+            col3.metric("Income as % of FPL", f"{income_percentage:.0f}%")
             st.caption(
-                "Based on estimated 2026 household income "
-                "and 2025 federal poverty guidelines."
+                "Based on 2026 estimated annual income and the 2025 "
+                "federal poverty guidelines used for Marketplace coverage "
+                "in 2026. Medicaid may use different household and income rules."
             )
-
+            if st.session_state.get("is_dependent") == "Yes":
+                st.caption(
+                    "Household size comes from the tax household of the "
+                    "person claiming you as a dependent. Financial assistance "
+                    "is assessed for that tax household, not for you separately."
+                )
+            if partner_household_uncertain:
+                st.caption(
+                    "An included partner or spouse may have a different tax "
+                    "household. This summary should not automatically be "
+                    "used to estimate that person's savings."
+                )
     else:
         st.info(
-            "Your tax household size could not be reliably "
-            "estimated from your answers. The suggestions "
-            "below are informational."
+            "An income-based household comparison could not be completed "
+            "reliably with these answers. The suggestions below are informational."
         )
 
     st.divider()
 
-    # Show benefits for each person
     for person in applicants:
-
         st.subheader(person["name"], anchor=False)
-
-        benefits = get_potential_benefits(
-            person,
-            household_size,
-            income,
-            applicants
-        )
-
+        benefits = get_potential_benefits(person, household_size, income, applicants)
         for benefit in benefits:
-
             with st.container(border=True):
-
-                st.markdown(
-                    f"##### {benefit['title']}",
-                    anchors=False
-                )
-
+                st.markdown(f"##### {benefit['title']}", anchors=False)
                 st.write(benefit["message"])
-
                 st.markdown(
-                    "[Learn more about eligibility]"
-                    f"({benefit['source']})"
+                    "[Learn more about eligibility]" f"({benefit['source']})"
                 )
 
     st.divider()
-
     st.warning(
-        "These results do not guarantee eligibility. "
-        "Actual benefits depend on additional factors, "
-        "including citizenship or immigration status, "
-        "tax filing information, current health coverage, "
-        "and employer-sponsored insurance. Additional "
-        "Marketplace savings restrictions apply in 2026."
+        "These results do not guarantee eligibility. Actual benefits depend "
+        "on additional factors, including citizenship or immigration status, "
+        "tax filing information, current health coverage, and "
+        "employer-sponsored insurance. Additional Marketplace savings "
+        "restrictions apply in 2026."
     )
-
+    st.caption(
+        "Important for 2026: If advance Premium Tax Credit payments exceed "
+        "the credit allowed on the final tax return, the full excess amount "
+        "must be repaid. Report changes in income and household circumstances "
+        "to the Marketplace."
+    )
     st.markdown(
         "[Explore official Marketplace coverage options]"
         "(https://www.healthcare.gov/)"
     )
 
     col1, spacer, col2 = st.columns([1, 4, 1.8])
-
     with col1:
         if st.button("← Return"):
             st.session_state.page = NEXT_SECTION + 4
             st.rerun()
 
     with col2:
-        if st.button(
-            "See Recommendations →",
-            type="primary",
-            width="stretch"
-        ):
+        if st.button("See Recommendations →", type="primary", width="stretch"):
             st.session_state.page = RECOMMENDATIONS_PAGE
             st.rerun()
 
-# Personalized Plan Explanations
+
+# personalized plan explanations
+# the comparison logic below is preserved from the original snippet.
 def generate_plan_fit_explanations(plan, all_plans, answers):
     """
-    Explain how a plan compares with the user's monthly
-    budget and each selected priority.
-
-    Explanations are based on plan attributes and comparisons,
-    not on the recommendation model's internal reasoning.
+    Explain plan comparisons based on plan attributes, not model internals.
     """
-
     explanations = {
         "budget": "",
-        "priorities": []
+        "priorities": [],
     }
 
     premium = plan["monthly_premium"]
@@ -1276,6 +1360,7 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
             f"This plan costs USD {premium:,.2f} per month. "
             "No monthly budget was provided."
         )
+
     else:
         difference = abs(premium - budget)
 
@@ -1301,10 +1386,17 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
 
     # Helper for comparing numeric costs across plans
     def compare_cost(field, label):
+        available = [
+            p for p in all_plans
+            if p.get(field) is not None
+        ]
 
-        available = [p for p in all_plans if p[field] is not None]
-        if plan[field] is None or not available:
-            return f"The {label} is not available in the prepared catalog for this plan."
+        if plan.get(field) is None or not available:
+            return (
+                f"The {label} is not available in the prepared "
+                "catalog for this plan."
+            )
+
         lowest_plan = min(available, key=lambda p: p[field])
 
         current_value = plan[field]
@@ -1315,8 +1407,7 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
         if abs(difference) < 0.005:
             return (
                 f"This plan has the lowest {label} among "
-                f"the compared options, at "
-                f"USD {current_value:,.2f}."
+                f"the compared options, at USD {current_value:,.2f}."
             )
 
         return (
@@ -1331,18 +1422,18 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
     for priority in priorities:
 
         if priority == "Lower monthly premiums":
-
             message = compare_cost(
                 "monthly_premium",
-                "monthly premium"
+                "monthly premium",
             )
 
         elif priority == "Lower costs when receiving care":
-
             message = (
                 compare_cost(
                     "deductible",
-                    "household deductible" if plan.get("covered_people", 1) > 1 else "individual deductible"
+                    "household deductible"
+                    if plan.get("covered_people", 1) > 1
+                    else "individual deductible",
                 )
                 + " Deductibles are only one component of "
                 "healthcare costs. Copayments and coinsurance "
@@ -1350,20 +1441,19 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
             )
 
         elif priority == "Protection against large medical bills":
-
             message = (
                 compare_cost(
                     "moop",
-                    "household out-of-pocket maximum" if plan.get("covered_people", 1) > 1 else "individual out-of-pocket maximum"
+                    "household out-of-pocket maximum"
+                    if plan.get("covered_people", 1) > 1
+                    else "individual out-of-pocket maximum",
                 )
                 + " This limit generally applies to covered "
                 "in-network cost-sharing, not monthly premiums "
                 "or non-covered services."
             )
 
-
         elif priority == "More freedom to choose doctors":
-
             referral_text = (
                 "Specialist referrals are required."
                 if plan["referrals_required"] is True
@@ -1393,7 +1483,6 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
                 "should be confirmed with the insurer."
             )
 
-
         else:
             message = (
                 "This priority has not yet been implemented "
@@ -1402,12 +1491,13 @@ def generate_plan_fit_explanations(plan, all_plans, answers):
 
         explanations["priorities"].append({
             "priority": priority,
-            "message": message
+            "message": message,
         })
 
     return explanations
 
-# Recommendation Cards
+
+# recommendation cards
 def render_recommendation_card(
     plan,
     all_plans,
@@ -1518,7 +1608,7 @@ def render_recommendation_card(
                 "No personal priorities were selected."
             )
 
-# Altair Pie Charts
+# altair pie charts
 def make_pie_chart(plans, field, title):
 
     chart_data = pd.DataFrame([
@@ -1665,10 +1755,10 @@ def render_model_recommendations():
         st.warning(f"Unable to produce model comparisons: {error}")
 
 
-# Health Insurance Recommendations Page
+# recommendations page
 if st.session_state.page == RECOMMENDATIONS_PAGE:
 
-    # Light-green background for the best-ranked plan
+    # light-green background for the best-ranked plan
     st.markdown(
         """
         <style>
@@ -1699,7 +1789,7 @@ if st.session_state.page == RECOMMENDATIONS_PAGE:
 
     st.divider()
 
-    # Navigation
+    # navigation
     col1, spacer, col2 = st.columns([1, 4, 1.8])
 
     with col1:
