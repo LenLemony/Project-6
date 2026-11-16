@@ -51,7 +51,7 @@ We call the layers Raw, Clean, and Curated so they are not confused with insuran
 - Git
 - PostgreSQL and a viewer (pgAdmin or DBeaver)
 - Python 3.x
-- *(Update this list if the team picks different tools.)*
+- Streamlit
 
 ### 2. Get the code
 ```bash
@@ -85,9 +85,9 @@ streamlit run app/app.py
 
 ## Data
 
-- **Source:** *(fill in: where the plan data comes from)*
-- **Plan year:** *(fill in)*
-- **Date downloaded:** *(fill in)*
+- **Source:** Plan Attributes, Benefits and Cost Sharing, and Rate CMS Marketplace Public Use Files (PUFs)
+- **Plan year:** 2026
+- **Date downloaded:** 10/25/2026
 - **Notes:** Plans and prices change every year, so results are only correct for the plan year above.
 
 Full details are in `data/README.md`. Large source files are not stored in Git.
@@ -117,11 +117,54 @@ Full details are in `data/README.md`. Large source files are not stored in Git.
 
 ## Status
 
-- [ ] Week 1: plan, research, repo, data sources
-- [ ] Week 2: Raw layer
-- [ ] Week 3: Clean layer
-- [ ] Week 4: Curated layer, recommender, interface
+- [X] Week 1: plan, research, repo, data sources
+- [X] Week 2: Raw layer
+- [X] Week 3: Clean layer
+- [X] Week 4: Curated layer, recommender, interface
 - [ ] Week 5: docs, testing, demo
+
+## Machine learning prototype
+
+The recommendations now use a saved **LGBMRanker** to return up to five plans
+within the shopper's budget. The existing questionnaire, plan cards and charts
+are kept in place.
+
+The 2026 prototype supports individual and household comparisons using plan costs,
+covered applicants, healthcare needs and preferences. It was trained on 600
+hypothetical household profiles with 122 features. Its labels are generated from
+preference rules, not real enrollment choices or verified suitability judgments.
+
+### Added files and folders
+
+| Location | What it contains |
+|---|---|
+| `preprocessing/` | Scripts to prepare the data, generate example labels and train the ranker |
+| `data/processed/` | Generated plan features and training/validation/test datasets |
+| `models/` | Saved model, feature definitions, configuration and training report |
+
+The added recommender code builds shopper–plan features, loads the saved model,
+and formats its results for the existing cards. Tests cover data joins, profile
+handling, household calculations, ranking inputs and the app's results flow.
+
+### Preparing data and training
+
+Run these commands from the project folder after installing the requirements:
+
+```bash
+python -m preprocessing.prepare
+python -m preprocessing.train_ranker --profiles 600
+```
+
+Training saves the model and its matching feature definitions. The app loads those
+files when making recommendations; it does not retrain after each answer change.
+
+See [the model explanation](docs/model_integration.md) for features, training and
+evaluation, and [questionnaire coverage](docs/questionnaire_model_v2.md) for how
+each answer is used.
+
+ZIP-specific availability, subsidy amounts, final eligibility and named doctor or
+medication checks still need work. Pricing currently uses a disclosed demonstration
+rating area, so the results remain prototype comparisons.
 
 ## License
 

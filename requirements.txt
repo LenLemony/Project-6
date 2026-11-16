@@ -11,6 +11,11 @@ requests>=2.31
 # Working with tables of data
 pandas>=2.0
 
+# Loading the model and drawing comparison charts
+lightgbm>=4.7
+scikit-learn>=1.6
+altair>=5.0
+
 # Talking to PostgreSQL
 psycopg2-binary>=2.9
 SQLAlchemy>=2.0
