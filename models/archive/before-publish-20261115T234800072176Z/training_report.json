@@ -1,0 +1,69 @@
+{
+  "version": "questionnaire_v2",
+  "coverage_year": 2026,
+  "label_source": "synthetic_questionnaire_rule_v2",
+  "features": 122,
+  "best_iteration": 293,
+  "profiles": 600,
+  "splits": {
+    "train": {
+      "profiles": 360,
+      "rows": 31301,
+      "labels": {
+        "0": 6407,
+        "1": 6109,
+        "2": 6230,
+        "3": 6148,
+        "4": 6407
+      }
+    },
+    "validation": {
+      "profiles": 120,
+      "rows": 10160,
+      "labels": {
+        "0": 2081,
+        "1": 1981,
+        "2": 2021,
+        "3": 1996,
+        "4": 2081
+      }
+    },
+    "test": {
+      "profiles": 120,
+      "rows": 10956,
+      "labels": {
+        "0": 2235,
+        "1": 2143,
+        "2": 2186,
+        "3": 2157,
+        "4": 2235
+      }
+    }
+  },
+  "validation_ndcg_at_5": 0.9840500322190768,
+  "test_ndcg_at_5": 0.9890750261112616,
+  "test_premium_baseline_ndcg_at_5": 0.7092929785645191,
+  "interpretation": "Agreement with synthetic preference labels, not insurance recommendation accuracy.",
+  "unsupported": [
+    "ZIP-to-county availability mapping",
+    "subsidy amounts and final eligibility",
+    "named provider/drug verification"
+  ],
+  "top_features": {
+    "metal_level": 8108.991529583931,
+    "premium_minus_budget": 2317.2764897421002,
+    "referral_required": 1997.953207552433,
+    "prenatal_in_network_copay_amount": 1846.0158631950617,
+    "priority_care_cost": 1677.0685062631965,
+    "monthly_premium": 1514.395347058773,
+    "premium_to_budget": 1210.0903907939792,
+    "generic_drugs_out_of_network_coinsurance_amount": 1208.681217983365,
+    "maternity_example_cost": 909.1798356175423,
+    "priority_doctor_freedom": 812.8593269884586,
+    "integrated_deductible_individual": 740.9487052261829,
+    "annual_premium_plus_moop": 706.1128236949444,
+    "integrated_moop_individual": 671.9084511250257,
+    "moop_individual": 531.6840191334486,
+    "out_network_preference": 467.3409400433302
+  }
+}
