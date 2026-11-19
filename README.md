@@ -70,14 +70,7 @@ Open `.env` and fill in your own database details (and an API key, if the team u
 pip install -r requirements.txt
 ```
 
-### 5. Build the warehouse
-Run the SQL scripts in the order listed in `sql/run_order.md`. In short:
-1. `sql/00_init/` creates the database and schemas
-2. `sql/raw/` creates and loads the Raw tables
-3. `sql/clean/` creates and loads the Clean tables
-4. `sql/curated/` creates the Curated views
-
-### 6. Run the app
+### 5. Run the app
 ```bash
 # Update this command if the team uses a different tool
 streamlit run app/app.py
