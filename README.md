@@ -1,4 +1,4 @@
-# Girls Who Code Project 6L Florida Health Insurance Recommender
+# Girls Who Code Project 6 - FL Florida Health Insurance Recommender
 
 > **Scope:** Health insurance plans in Florida, for plan year **2026**.
 >
