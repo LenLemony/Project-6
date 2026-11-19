@@ -1521,7 +1521,7 @@ def render_recommendation_card(
         else:
             st.caption(f"RANK #{plan['rank']}")
 
-        st.subheader(plan["name"], anchor=False)
+        st.subheader(plan["name"].replace("$", r"\$"), anchor=False)
 
         st.caption(
             f"{plan['issuer']}  ·  "
