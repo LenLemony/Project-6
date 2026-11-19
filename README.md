@@ -69,8 +69,13 @@ Open `.env` and fill in your own database details (and an API key, if the team u
 ```bash
 pip install -r requirements.txt
 ```
+### 5. Save the model and its matching feature definitions
+```bash
+python -m preprocessing.prepare
+python -m preprocessing.train_ranker --profiles 600
+```
 
-### 5. Run the app
+### 6. Run the app
 ```bash
 # Update this command if the team uses a different tool
 streamlit run app/app.py
