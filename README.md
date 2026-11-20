@@ -77,7 +77,6 @@ python -m preprocessing.train_ranker --profiles 600
 
 ### 6. Run the app
 ```bash
-# Update this command if the team uses a different tool
 streamlit run app/app.py
 ```
 
@@ -119,7 +118,7 @@ Full details are in `data/README.md`. Large source files are not stored in Git.
 - [X] Week 2: Raw layer
 - [X] Week 3: Clean layer
 - [X] Week 4: Curated layer, recommender, interface
-- [ ] Week 5: docs, testing, demo
+- [X] Week 5: docs, testing, demo
 
 ## Machine learning prototype
 
